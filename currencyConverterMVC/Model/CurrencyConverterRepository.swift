@@ -14,18 +14,23 @@ class CurrencyConverterRepository {
         self.session = URLSession.shared
     }
     
-    func getCurrencies() -> [String: String]? {
+    func getCurrencies() -> [(String, String)]? {
         guard let filepath = Bundle.main.path(forResource: "currencies", ofType: "json") else { return nil }
         
         do {
             let data =  try String(contentsOfFile: filepath).data(using: .utf8)!
-            return try JSONDecoder().decode([String: String].self, from: data)
+            let currencies = try JSONDecoder().decode([String: String].self, from: data)
+            
+            return currencies.compactMap { (key, value) in
+                return (key, value)
+            }
+            
         } catch {
             return nil
         }
     }
         
-    func getLatestRate(from base: String, completion: @escaping(RateResponse?, Error?) -> Void) {
+    func getLatestRate(from base: String, completion: @escaping(Rate?, Error?) -> Void) {
         guard var url = URL(string:  Constants.api.latestRate, relativeTo: Constants.api.getBaseURL()) else {
 
             fatalError("Malformed URL at \(#function)")
@@ -35,12 +40,16 @@ class CurrencyConverterRepository {
 
         session.dataTask(with: url) { (data, response, error) in
             guard error == nil else {
-                completion(nil, error)
+                DispatchQueue.main.async {
+                    completion(nil, error)
+                }
                 return
             }
 
             guard let data = data else {
-                completion(nil, NSError(domain: "No data", code: 10, userInfo: nil))
+                DispatchQueue.main.async {
+                    completion(nil, NSError(domain: "No data", code: 10, userInfo: nil))
+                }
                 return
             }
 
@@ -51,9 +60,14 @@ class CurrencyConverterRepository {
                 decoder.dateDecodingStrategy = .formatted(formatter)
                 
                 let rates =  try decoder.decode(RateResponse.self, from: data)
-                completion(rates, nil)
+                
+                DispatchQueue.main.async {
+                    completion(rates, nil)
+                }
             } catch {
-                completion(nil, error)
+                DispatchQueue.main.async {
+                    completion(nil, error)
+                }
             }
         }.resume()
     }
