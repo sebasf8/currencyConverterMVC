@@ -44,6 +44,7 @@ class CurrencyConverterViewController: UIViewController {
             }
             
             self.rates = response!
+            self.makeConvertion()
         }
     }
     
@@ -85,10 +86,11 @@ extension CurrencyConverterViewController: CountryPickerViewControllerDelegate {
     func didConuntrySelection(_: CountryPickerViewController, country: (String, String)) {
         guard let selectedButton = self.selectedButton else { return }
         
-        selectedButton.setTitle(country.0, for: .normal)
+        let currency = country.0
+        selectedButton.setTitle(currency, for: .normal)
         
-        if selectedButton.isEqual(countryBaseView.nameButton), let currency = selectedButton.title(for: .normal) {
-                fetchRateData(for: currency)
+        if selectedButton.isEqual(countryBaseView.nameButton) {
+            fetchRateData(for: currency)
         } else {
             makeConvertion()
         }
