@@ -59,9 +59,15 @@ class CurrencyConverterViewController: UIViewController {
         makeConvertion()
     }
     
-    @IBAction func convertPressed(_ sender: Any) {
-        makeConvertion()
+    @IBAction func invertCurrencies(_ sender: Any) {
+        let baseCurrency = countryBaseView.nameButton.title(for: .normal)
+        let finalCurrency = countryFinalView.nameButton.title(for: .normal)
+
+        countryBaseView.nameButton.setTitle(finalCurrency, for: .normal)
+        countryFinalView.nameButton.setTitle(baseCurrency, for: .normal)
+        fetchRateData(for: finalCurrency!)
     }
+    
 }
 
 //MARK: - CountryViewDelegate
