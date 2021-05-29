@@ -24,7 +24,7 @@ class CountryPickerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        guard let currencies = repository.getCurrencies() else { fatalError() }
+        let currencies = repository.getCurrencies()
         
         searchBar.delegate = self
         countryPicker.delegate = self
@@ -32,7 +32,6 @@ class CountryPickerViewController: UIViewController {
         self.currencies = currencies
         self.filteredCurrencies = self.currencies
         countryPicker.register(UITableViewCell.self, forCellReuseIdentifier: cellIdentifier)
-        
     }
 }
     

@@ -12,9 +12,10 @@ class CurrencyConverterViewController: UIViewController {
     @IBOutlet weak var countryFinalView: CountryView!
     @IBOutlet weak var ammountTextField: UITextField!
     @IBOutlet weak var convertedAmmountLabel: UILabel!
+    @IBOutlet weak var messageLabel: UILabel!
     
     var repository: CurrencyConverterRepository!
-    var rates: Rate!
+    var rates: Rate?
     
     lazy var countryPicker = CountryPickerViewController()
     var selectedButton: UIButton?
@@ -30,20 +31,25 @@ class CurrencyConverterViewController: UIViewController {
         
         repository = CurrencyConverterRepository()
         
-        fetchRateData(for: "USD")
+        updateBaseCurrencyAndRates(for: "USD")
     }
     
-    func fetchRateData(for currency: String) {
+    func updateBaseCurrencyAndRates(for currency: String) {
+        messageLabel.isHidden = true
         repository.getLatestRate(from: currency){ response, error in
             guard error == nil else {
-                fatalError()
+                self.messageLabel.text = error?.localizedDescription
+                self.messageLabel.isHidden = false
+                
+                return
             }
             
             guard response != nil else {
-                fatalError()
+                return
             }
             
             self.rates = response!
+            self.countryBaseView.nameButton.setTitle(currency, for: .normal)
             self.makeConvertion()
         }
     }
@@ -51,8 +57,9 @@ class CurrencyConverterViewController: UIViewController {
     func makeConvertion() {
         let ammount = Double(ammountTextField.text != "" ? ammountTextField.text! : "0.0")!
         
-        let convertedAmmount = rates.convert(ammount: ammount, to: countryFinalView.nameButton.title(for: .normal)!)
-        convertedAmmountLabel.text = String(format: "%.2f", convertedAmmount)
+        if let convertedAmmount = rates?.convert(ammount: ammount, to: countryFinalView.nameButton.title(for: .normal)!) {
+            convertedAmmountLabel.text = String(format: "%.2f", convertedAmmount)
+        }
     }
     
     @IBAction func ammountChanged(_ sender: UITextField) {
@@ -65,7 +72,7 @@ class CurrencyConverterViewController: UIViewController {
 
         countryBaseView.nameButton.setTitle(finalCurrency, for: .normal)
         countryFinalView.nameButton.setTitle(baseCurrency, for: .normal)
-        fetchRateData(for: finalCurrency!)
+        updateBaseCurrencyAndRates(for: finalCurrency!)
     }
     
 }
@@ -93,11 +100,11 @@ extension CurrencyConverterViewController: CountryPickerViewControllerDelegate {
         guard let selectedButton = self.selectedButton else { return }
         
         let currency = country.0
-        selectedButton.setTitle(currency, for: .normal)
         
         if selectedButton.isEqual(countryBaseView.nameButton) {
-            fetchRateData(for: currency)
+            updateBaseCurrencyAndRates(for: currency)
         } else {
+            selectedButton.setTitle(currency, for: .normal)
             makeConvertion()
         }
     }

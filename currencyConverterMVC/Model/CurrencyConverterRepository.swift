@@ -14,20 +14,17 @@ class CurrencyConverterRepository {
         self.session = URLSession.shared
     }
     
-    func getCurrencies() -> [(String, String)]? {
-        guard let filepath = Bundle.main.path(forResource: "currencies", ofType: "json") else { return nil }
+    func getCurrencies() -> [(String, String)] {
+        guard let filepath = Bundle.main.path(forResource: "currencies", ofType: "json") else { fatalError("No currencies file found")}
         
-        do {
-            let data =  try String(contentsOfFile: filepath).data(using: .utf8)!
-            let currencies = try JSONDecoder().decode([String: String].self, from: data)
+            let file =  try! String(contentsOfFile: filepath)
+            let data = file.data(using: .utf8)!
+        
+            let currencies = try! JSONDecoder().decode([String: String].self, from: data)
             
             return currencies.compactMap { (key, value) in
                 return (key, value)
             }
-            
-        } catch {
-            return nil
-        }
     }
         
     func getLatestRate(from base: String, completion: @escaping(Rate?, Error?) -> Void) {
