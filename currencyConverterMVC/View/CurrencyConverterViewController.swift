@@ -8,104 +8,110 @@
 import UIKit
 
 class CurrencyConverterViewController: UIViewController {
-    @IBOutlet weak var countryBaseView: CountryView!
-    @IBOutlet weak var countryFinalView: CountryView!
-    @IBOutlet weak var ammountTextField: UITextField!
-    @IBOutlet weak var convertedAmmountLabel: UILabel!
-    @IBOutlet weak var messageLabel: UILabel!
+    @IBOutlet weak private var baseCurrencyView: CurrencyView!
+    @IBOutlet weak private var finalCurrencyView: CurrencyView!
+    @IBOutlet weak private var baseAmountTextField: UITextField!
+    @IBOutlet weak private var finalAmountLabel: UILabel!
+    @IBOutlet weak private var errormMessageLabel: UILabel!
     
-    var repository: CurrencyConverterRepository!
-    var rates: Rate?
-    
-    lazy var countryPicker = CountryPickerViewController()
-    var selectedButton: UIButton?
+    private let baseCurrencyViewId = "base"
+    private let finalCurrencyViewId = "final"
+    private var selectedCurrencyViewId = ""
+    private let repository = CurrencyConverterRepository()
+    private var rates: RateGroup?
+    private var baseCurrency = "USD"
+    private var finalCurrency = "USD"
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        countryBaseView.delegate = self
-        countryFinalView.delegate = self
+        baseCurrencyView.delegate = self
+        baseCurrencyView.id = baseCurrencyViewId
+        baseCurrencyView.configure(title: baseCurrency)
+
+        finalCurrencyView.delegate = self
+        finalCurrencyView.id = finalCurrencyViewId
+        finalCurrencyView.configure(title: baseCurrency)
         
-        countryBaseView.nameButton.setTitle("USD", for: .normal)
-        countryFinalView.nameButton.setTitle("USD", for: .normal)
-        convertedAmmountLabel.text = "0"
-        
-        repository = CurrencyConverterRepository()
-        
-        updateBaseCurrencyAndRates(for: "USD")
+        finalAmountLabel.text = "0"
+        fetchLatestRates()
     }
     
-    func updateBaseCurrencyAndRates(for currency: String) {
-        messageLabel.isHidden = true
-        repository.getLatestRate(from: currency){ response, error in
-            guard error == nil else {
-                self.messageLabel.text = error?.localizedDescription
-                self.messageLabel.isHidden = false
-                
-                return
-            }
-            
-            guard response != nil else {
-                return
-            }
-            
-            self.rates = response!
-            self.countryBaseView.nameButton.setTitle(currency, for: .normal)
-            self.makeConvertion()
+    private func showErrorMessage(_ message: String) {
+        self.errormMessageLabel.text = message
+        self.errormMessageLabel.isHidden = false
+    }
+    
+    private func fetchLatestRates() {
+        errormMessageLabel.isHidden = true
+        repository.getLatestRate(from: self.baseCurrency){ [weak self] result in
+            self?.fetchLatestRatesCompletion(result: result)
         }
     }
     
-    func makeConvertion() {
-        let ammount = Double(ammountTextField.text != "" ? ammountTextField.text! : "0.0")!
-        
-        if let convertedAmmount = rates?.convert(ammount: ammount, to: countryFinalView.nameButton.title(for: .normal)!) {
-            convertedAmmountLabel.text = String(format: "%.2f", convertedAmmount)
+    private func fetchLatestRatesCompletion(result: Result<RateGroup, Error>) {
+        switch result {
+        case .success(let rateGroup):
+            rates = rateGroup
+            makeConvertion()
+        case .failure(let error):
+            showErrorMessage(error.localizedDescription)
         }
     }
     
-    @IBAction func ammountChanged(_ sender: UITextField) {
+    private func makeConvertion() {
+        let baseAmount = Double(baseAmountTextField.text ?? "") ?? 0.0
+        
+        if let convertedAmmount = rates?.convert(amount: baseAmount, to: finalCurrency) {
+            finalAmountLabel.text = String(format: "%.2f", convertedAmmount)
+        }
+    }
+    
+    @IBAction private func ammountChanged(_ sender: UITextField) {
         makeConvertion()
     }
     
-    @IBAction func invertCurrencies(_ sender: Any) {
-        let baseCurrency = countryBaseView.nameButton.title(for: .normal)
-        let finalCurrency = countryFinalView.nameButton.title(for: .normal)
+    @IBAction private func invertCurrencies(_ sender: Any) {
+        let exFinalCurrency = finalCurrency
 
-        countryBaseView.nameButton.setTitle(finalCurrency, for: .normal)
-        countryFinalView.nameButton.setTitle(baseCurrency, for: .normal)
-        updateBaseCurrencyAndRates(for: finalCurrency!)
+        finalCurrency = baseCurrency
+        baseCurrency = exFinalCurrency
+        
+        baseCurrencyView.configure(title: baseCurrency)
+        finalCurrencyView.configure(title: finalCurrency)
+        
+        fetchLatestRates()
     }
-    
 }
 
 //MARK: - CountryViewDelegate
 extension CurrencyConverterViewController: CountryViewDelegate {
-    func currencyNameDidTap(_: CountryView, button: UIButton) {
-        selectedButton = button
+    func currencyButtonWasTapped(_ countryView: CurrencyView) {
+        selectedCurrencyViewId = countryView.id ?? ""
         
-        if(countryPicker.delegate == nil) {
-            countryPicker.delegate = self
-        }
-        
+        let countryPicker = CountryPickerViewController()
+        countryPicker.delegate = self
         countryPicker.modalPresentationStyle = .pageSheet
         countryPicker.modalTransitionStyle = .coverVertical
 
         present(countryPicker, animated: true)
     }
- 
 }
 
 //MARK: - CountryPickerViewControllerDelegate
 extension CurrencyConverterViewController: CountryPickerViewControllerDelegate {
-    func didConuntrySelection(_: CountryPickerViewController, country: (String, String)) {
-        guard let selectedButton = self.selectedButton else { return }
+    func currencyWasSelected(_ countryPickerViewController: CountryPickerViewController, currency: Currency) {
         
-        let currency = country.0
-        
-        if selectedButton.isEqual(countryBaseView.nameButton) {
-            updateBaseCurrencyAndRates(for: currency)
-        } else {
-            selectedButton.setTitle(currency, for: .normal)
+        switch selectedCurrencyViewId {
+        case baseCurrencyViewId:
+            baseCurrency = currency.shortName
+            baseCurrencyView.configure(title: currency.shortName)
+            fetchLatestRates()
+        case finalCurrencyViewId:
+            finalCurrency = currency.shortName
+            finalCurrencyView.configure(title: currency.shortName)
             makeConvertion()
+        default:
+            return
         }
     }
 }

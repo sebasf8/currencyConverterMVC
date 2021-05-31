@@ -8,7 +8,7 @@
 import Foundation
 
 struct Constants {
-    struct api {
+    struct API {
         static func getBaseURL() -> URL? {
             return URL(string: "https://api.exchangerate-api.com")
         }

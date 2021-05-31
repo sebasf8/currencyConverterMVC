@@ -12,11 +12,11 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CurrencyConverterViewController" customModule="Currencies" customModuleProvider="target">
             <connections>
-                <outlet property="ammountTextField" destination="3U1-pK-DN0" id="skt-gJ-9QS"/>
-                <outlet property="convertedAmmountLabel" destination="fnv-GA-7A1" id="VRA-Yz-o4g"/>
-                <outlet property="countryBaseView" destination="gtr-Ec-HAk" id="nDT-9S-yeW"/>
-                <outlet property="countryFinalView" destination="p70-mu-VE1" id="YAi-TP-kgR"/>
-                <outlet property="messageLabel" destination="ZEJ-LL-eUB" id="ltK-a3-oMh"/>
+                <outlet property="baseAmountTextField" destination="3U1-pK-DN0" id="skt-gJ-9QS"/>
+                <outlet property="baseCurrencyView" destination="gtr-Ec-HAk" id="nDT-9S-yeW"/>
+                <outlet property="errormMessageLabel" destination="ZEJ-LL-eUB" id="ltK-a3-oMh"/>
+                <outlet property="finalAmountLabel" destination="fnv-GA-7A1" id="VRA-Yz-o4g"/>
+                <outlet property="finalCurrencyView" destination="p70-mu-VE1" id="YAi-TP-kgR"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
         </placeholder>
@@ -61,7 +61,7 @@
                                         <action selector="ammountChanged:" destination="-1" eventType="editingChanged" id="0tc-i4-2yD"/>
                                     </connections>
                                 </textField>
-                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gtr-Ec-HAk" customClass="CountryView" customModule="Currencies" customModuleProvider="target">
+                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gtr-Ec-HAk" customClass="CurrencyView" customModule="Currencies" customModuleProvider="target">
                                     <rect key="frame" x="0.0" y="30.333333333333343" width="90" height="69"/>
                                     <constraints>
                                         <constraint firstAttribute="width" secondItem="gtr-Ec-HAk" secondAttribute="height" multiplier="30:23" id="5pn-on-kCw"/>
@@ -94,7 +94,7 @@
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="nZR-gd-tZl">
                             <rect key="frame" x="0.0" y="279.33333333333331" width="408" height="129.33333333333331"/>
                             <subviews>
-                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="p70-mu-VE1" customClass="CountryView" customModule="Currencies" customModuleProvider="target">
+                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="p70-mu-VE1" customClass="CurrencyView" customModule="Currencies" customModuleProvider="target">
                                     <rect key="frame" x="0.0" y="30" width="90" height="69"/>
                                 </view>
                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0.00" textAlignment="right" lineBreakMode="clip" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fnv-GA-7A1">

@@ -8,15 +8,16 @@
 import UIKit
 
 protocol CountryViewDelegate {
-    func currencyNameDidTap(_: CountryView, button: UIButton)
+    func currencyButtonWasTapped(_ currencyView: CurrencyView)
 }
 
-class CountryView: UIView {
-    @IBOutlet weak var nameButton: UIButton!
+class CurrencyView: UIView {
+    @IBOutlet weak private var nameButton: UIButton!
     
-    let nibName = "CountryView"
     var delegate: CountryViewDelegate?
 
+    private let nibName = "CountryView"
+    var id: String?
         
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
@@ -30,8 +31,8 @@ class CountryView: UIView {
     
     func commonInit() {
         guard let view = loadViewFromNib() else { return }
-        view.frame = self.bounds
-        self.addSubview(view)
+        view.frame = bounds
+        addSubview(view)
     }
     
     func loadViewFromNib() -> UIView? {
@@ -39,8 +40,11 @@ class CountryView: UIView {
         return nib.instantiate(withOwner: self, options: nil).first as? UIView
     }
     
+    func configure(title: String) {
+        nameButton.setTitle(title, for: .normal)
+    }
     
     @IBAction func currencyNameTapped(_ sender: UIButton) {
-        delegate?.currencyNameDidTap(self, button: sender)
+        delegate?.currencyButtonWasTapped(self)
     }
 }

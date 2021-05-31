@@ -8,14 +8,16 @@
 import Foundation
 
 class CurrencyConverterRepository {
-    var session: URLSession!
+    var session: URLSession
     
     init() {
         self.session = URLSession.shared
     }
     
-    func getCurrencies() -> [(String, String)] {
-        guard let filepath = Bundle.main.path(forResource: "currencies", ofType: "json") else { fatalError("No currencies file found")}
+    func getCurrencies() -> [Currency] {
+        guard let filepath = Bundle.main.path(forResource: "currencies", ofType: "json") else {
+            fatalError("No currencies file found")
+        }
         
             let file =  try! String(contentsOfFile: filepath)
             let data = file.data(using: .utf8)!
@@ -23,12 +25,12 @@ class CurrencyConverterRepository {
             let currencies = try! JSONDecoder().decode([String: String].self, from: data)
             
             return currencies.compactMap { (key, value) in
-                return (key, value)
+                Currency(shortName: key, name: value)
             }
     }
         
-    func getLatestRate(from base: String, completion: @escaping(Rate?, Error?) -> Void) {
-        guard var url = URL(string:  Constants.api.latestRate, relativeTo: Constants.api.getBaseURL()) else {
+    func getLatestRate(from base: String, completion: @escaping(Result<RateGroup, Error>) -> Void) {
+        guard var url = URL(string:  Constants.API.latestRate, relativeTo: Constants.API.getBaseURL()) else {
 
             fatalError("Malformed URL at \(#function)")
         }
@@ -38,14 +40,14 @@ class CurrencyConverterRepository {
         session.dataTask(with: url) { (data, response, error) in
             guard error == nil else {
                 DispatchQueue.main.async {
-                    completion(nil, error)
+                    completion(.failure(error!))
                 }
                 return
             }
 
             guard let data = data else {
                 DispatchQueue.main.async {
-                    completion(nil, NSError(domain: "No data", code: 10, userInfo: nil))
+                    completion(.failure(NetworkingError.noResponse))
                 }
                 return
             }
@@ -59,11 +61,11 @@ class CurrencyConverterRepository {
                 let rates =  try decoder.decode(RateResponse.self, from: data)
                 
                 DispatchQueue.main.async {
-                    completion(rates, nil)
+                    completion(.success(rates))
                 }
             } catch {
                 DispatchQueue.main.async {
-                    completion(nil, error)
+                    completion(.failure(NetworkingError.parsingError))
                 }
             }
         }.resume()

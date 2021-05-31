@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import currencyConverterMVC
+@testable import Currencies
 
 class currencyConverterMVCTests: XCTestCase {
     var sut: CurrencyConverterRepository!
@@ -26,7 +26,7 @@ class currencyConverterMVCTests: XCTestCase {
     func testGetLatestRateWithExpectedUrlHostAndPath() throws {
         let mockURLSession = MockURLSession(data: nil, urlResponse: nil, error: nil)
         sut.session = mockURLSession
-        sut.getLatestRate(from: "USD") { rates, error in }
+        sut.getLatestRate(from: "USD") { result in }
 
         XCTAssertEqual(mockURLSession.cachedUrl?.host, "api.exchangerate-api.com")
         XCTAssertEqual(mockURLSession.cachedUrl?.path, "/v4/latest/USD")
@@ -40,10 +40,11 @@ class currencyConverterMVCTests: XCTestCase {
 
         sut.session = MockURLSession(data: jsonData, urlResponse: nil, error: nil)
         let ratesExpectation = expectation(description: "rates")
-        var ratesResponse: RateResponse?
+        var ratesResponse: RateGroup?
 
-        sut.getLatestRate(from: "USD") {rates, error in
-            ratesResponse = rates
+        sut.getLatestRate(from: "USD") {result   in
+            
+            ratesResponse = try! result.get()
             ratesExpectation.fulfill()
         }
 
@@ -59,8 +60,12 @@ class currencyConverterMVCTests: XCTestCase {
         let errorExpectation = expectation(description: "error")
         var errorResponse: Error?
 
-        sut.getLatestRate(from: "USD") { currencies, error in
-            errorResponse = error
+        sut.getLatestRate(from: "USD") { result in
+            do {
+                _ = try result.get()
+            }catch {
+                errorResponse = error
+            }
             errorExpectation.fulfill()
         }
 
@@ -74,8 +79,12 @@ class currencyConverterMVCTests: XCTestCase {
         var errorResponse: Error?
         let emptyDataExpectation = expectation(description: "emptyData")
 
-        sut.getLatestRate(from: "USD") { currencies, error in
-            errorResponse = error
+        sut.getLatestRate(from: "USD") { result in
+            do {
+                _ = try result.get()
+            }catch {
+                errorResponse = error
+            }
             emptyDataExpectation.fulfill()
         }
 
@@ -90,8 +99,12 @@ class currencyConverterMVCTests: XCTestCase {
         let errorExpectation = expectation(description: "error")
         var errorResponse: Error?
 
-        sut.getLatestRate(from: "USD") { (movies, error) in
-          errorResponse = error
+        sut.getLatestRate(from: "USD") { result in
+            do {
+                _ = try result.get()
+            }catch {
+                errorResponse = error
+            }
           errorExpectation.fulfill()
         }
 

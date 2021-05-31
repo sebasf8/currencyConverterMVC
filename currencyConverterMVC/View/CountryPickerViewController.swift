@@ -7,30 +7,29 @@
 
 import UIKit
 
-protocol CountryPickerViewControllerDelegate {
-    func didConuntrySelection(_ :CountryPickerViewController, country: (String, String))
+protocol CountryPickerViewControllerDelegate: AnyObject {
+    func currencyWasSelected(_ countryPickerViewController: CountryPickerViewController, currency: Currency)
 }
 
 class CountryPickerViewController: UIViewController {
-    @IBOutlet weak var searchBar: UISearchBar!
-    @IBOutlet weak var countryPicker: UITableView!
+    @IBOutlet weak private var searchBar: UISearchBar!
+    @IBOutlet weak private var countryPicker: UITableView!
     
-    let cellIdentifier = "countryCell"
-    var delegate: CountryPickerViewControllerDelegate?
-    var repository: CurrencyConverterRepository = CurrencyConverterRepository()
-    var currencies: [(String, String)]!
-    var filteredCurrencies: [(String,String)]!
+    private let cellIdentifier = "countryCell"
+    private let repository = CurrencyConverterRepository()
+    private var currencies: [Currency] = []
+    private var filteredCurrencies: [Currency] = []
+
+    weak var delegate: CountryPickerViewControllerDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        let currencies = repository.getCurrencies()
         
         searchBar.delegate = self
         countryPicker.delegate = self
         countryPicker.dataSource = self
-        self.currencies = currencies
-        self.filteredCurrencies = self.currencies
+        currencies = repository.getCurrencies()
+        filteredCurrencies = currencies
         countryPicker.register(UITableViewCell.self, forCellReuseIdentifier: cellIdentifier)
     }
 }
@@ -42,39 +41,40 @@ extension CountryPickerViewController: UITableViewDelegate, UITableViewDataSourc
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return filteredCurrencies.count
+        filteredCurrencies.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
         
-        let (short, name) = filteredCurrencies[indexPath.row]
-        cell.textLabel!.text = "\(short) - \(name)"
+        let currency = filteredCurrencies[indexPath.row]
+        cell.textLabel?.text = "\(currency.shortName) - \(currency.name)"
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        delegate?.didConuntrySelection(self, country: filteredCurrencies[indexPath.row])
-        self.searchBar.text = ""
-        self.filteredCurrencies = currencies
-        countryPicker.reloadData()
-        
+        delegate?.currencyWasSelected(self, currency: filteredCurrencies[indexPath.row])
         dismiss(animated: true)
     }
 }
 
+//MARK: - UISearchBarDelegate
 extension CountryPickerViewController: UISearchBarDelegate {
+    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        
         if searchText != "" {
-            filteredCurrencies = currencies.filter { (short, name) -> Bool in
-                return short.contains(searchText.uppercased()) || name.lowercased().contains(searchText.lowercased())
-            }
+            filteredCurrencies = filterCoincidencies(searchText)
         } else {
             filteredCurrencies = currencies
         }
         
-        self.countryPicker.reloadData()
+        countryPicker.reloadData()
+    }
+    
+    private func filterCoincidencies(_ searchText: String) -> [Currency] {
+        currencies.filter { currency in
+            currency.shortName.contains(searchText.uppercased()) || currency.name.lowercased().contains(searchText.lowercased())
+        }
     }
 }

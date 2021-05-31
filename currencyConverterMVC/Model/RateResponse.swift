@@ -7,24 +7,8 @@
 
 import Foundation
 
-protocol Rate {
-    var base: String? { get set }
-    var date: Date? { get set }
-    var rates: [String: Double] { get set }
-    
-    func convert(ammount: Double, to: String) -> Double
-}
-
-struct RateResponse: Codable, Rate {
+struct RateResponse: Codable, RateGroup {
     var base: String?
     var date: Date?
     var rates: [String: Double]
-    
-    func convert(ammount: Double, to currency: String) -> Double {
-        if let convertionRate = rates[currency] {
-            return ammount * convertionRate
-        }
-        
-        return 0.0
-    }
 }
